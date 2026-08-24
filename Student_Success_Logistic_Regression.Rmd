@@ -1,0 +1,206 @@
+---
+title: "Predicting Student Success with Logistic Regression"
+author: "Kenny Ejiogu"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Project Overview
+
+This project uses logistic regression to examine factors associated with student success in a Portuguese-language course. The analysis uses the Student Performance dataset from the UCI Machine Learning Repository and predicts whether a student passed the course based on demographic, academic, family, and social characteristics.
+
+The purpose of the analysis is to identify factors associated with student outcomes while demonstrating data preparation, exploratory analysis, logistic regression modeling, and interpretation of model results.
+
+# Data Source
+
+The Student Performance dataset was originally collected from secondary-school students and is available through the UCI Machine Learning Repository. The dataset contains information about student demographics, family background, school experiences, study habits, and social behavior.
+
+For this analysis, only students enrolled in the Portuguese course are considered. The original grade variables `G1`, `G2`, and `G3` are excluded. Instead, the response variable `passed` represents whether a student achieved the defined passing threshold based on the final course grade.
+
+# Data Preparation
+
+```{r data-import}
+student_data <- read.csv("StudentDataCleaned.csv")
+
+# Select ten predictors for the analysis
+selected_variables <- c(2, 3, 7, 8, 13, 14, 15, 21, 22, 30)
+
+model_data <- student_data[, c(31, selected_variables)]
+
+names(model_data)
+```
+
+The reduced dataset contains the binary response variable `passed` and ten predictor variables selected to examine potential relationships with student success.
+
+# Exploratory Analysis
+
+Before fitting the logistic regression model, the structure and distribution of the selected variables are examined.
+
+```{r data-summary}
+str(model_data)
+summary(model_data)
+```
+
+The exploratory analysis provides an overview of the variables included in the model and helps identify differences in scale, variable type, and distribution.
+
+# Response Variable
+
+The distribution of passing and non-passing students is examined before model fitting.
+
+```{r response-distribution}
+table(model_data$passed)
+
+prop.table(table(model_data$passed))
+```
+
+Understanding the distribution of the response variable provides context for interpreting the logistic regression model and its predictions.
+
+# Logistic Regression Model
+
+Logistic regression is appropriate because the response variable, `passed`, represents a binary outcome.
+
+A baseline intercept-only model is first created.
+
+```{r null-model}
+model_null <- glm(
+  passed ~ 1,
+  data = model_data,
+  family = "binomial"
+)
+
+summary(model_null)
+```
+
+A full model containing the available predictors is then specified.
+
+```{r full-model}
+model_full <- glm(
+  passed ~ .,
+  data = model_data,
+  family = "binomial"
+)
+
+summary(model_full)
+```
+
+# Variable Selection
+
+Forward stepwise selection is used to identify a more concise model from the candidate predictors.
+
+```{r stepwise-model}
+model_step <- step(
+  model_null,
+  scope = list(
+    lower = model_null,
+    upper = model_full
+  ),
+  direction = "forward",
+  steps = 25,
+  trace = 0
+)
+
+summary(model_step)
+```
+
+The selected model contains predictors that improve model fit relative to the intercept-only model under the stepwise selection procedure.
+
+# Model Interpretation
+
+Logistic regression coefficients are expressed in log-odds. Exponentiating the coefficients converts them to odds ratios, which are generally easier to interpret.
+
+```{r odds-ratios}
+odds_ratios <- exp(coef(model_step))
+
+odds_ratios
+```
+
+An odds ratio greater than 1 indicates that higher values of a predictor, or membership in a particular category relative to its reference category, are associated with higher odds of passing. An odds ratio below 1 indicates an association with lower odds of passing.
+
+These relationships should be interpreted as associations rather than causal effects.
+
+# Predicted Probabilities
+
+The fitted model can also be used to estimate each student's probability of passing.
+
+```{r predicted-probabilities}
+model_data$predicted_probability <- predict(
+  model_step,
+  type = "response"
+)
+
+summary(model_data$predicted_probability)
+```
+
+The predicted probabilities range from 0 to 1, with larger values representing a higher estimated probability of passing.
+
+# Classification
+
+Using a probability threshold of 0.50, predicted probabilities are converted into predicted outcomes.
+
+```{r classification}
+model_data$predicted_class <- ifelse(
+  model_data$predicted_probability >= 0.50,
+  1,
+  0
+)
+
+confusion_matrix <- table(
+  Actual = model_data$passed,
+  Predicted = model_data$predicted_class
+)
+
+confusion_matrix
+```
+
+# Classification Accuracy
+
+```{r accuracy}
+accuracy <- mean(
+  model_data$predicted_class == model_data$passed
+)
+
+accuracy
+```
+
+Classification accuracy provides a straightforward summary of the proportion of observations correctly classified using the selected probability threshold. Accuracy alone does not provide a complete assessment of model quality, particularly when outcome classes are imbalanced.
+
+# Key Findings
+
+This project demonstrates how logistic regression can be used to analyze a binary educational outcome. Student demographic, academic, family, and social characteristics were considered as potential predictors of whether a student passed the course.
+
+Forward stepwise selection was used to identify a reduced model, and model coefficients were converted to odds ratios to make the relationships easier to interpret. Predicted probabilities were also generated and converted into classifications to evaluate model performance.
+
+The model results can help identify which characteristics in this dataset have the strongest statistical associations with student success. Because the dataset is observational, these relationships should not be interpreted as evidence that the predictors directly cause students to pass or fail.
+
+# Limitations
+
+Several limitations should be considered when interpreting the results. The analysis focuses on students from a particular educational context, so the findings may not generalize to all student populations. Student performance is also influenced by factors that may not be represented in the available variables.
+
+Additionally, stepwise variable selection is a convenient exploratory modeling technique but may produce models that are sensitive to the particular sample. The results are therefore most useful as an exploratory analysis rather than as a definitive predictive system.
+
+# Skills Demonstrated
+
+* R
+* Data preparation and exploration
+* Logistic regression
+* Binary classification
+* Predictor selection
+* Odds-ratio interpretation
+* Predicted probabilities
+* Model evaluation
+* Statistical communication
+
+```
+```
