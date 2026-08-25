@@ -18,13 +18,6 @@ Used R and logistic regression to analyze student performance data and explore f
 
 [View Analysis & Visualizations](Student_Success_Logistic_Regression.html)
 
-### Retail Sales Python Analysis
-Analyzed retail sales data using Python and created visualizations to explore sales patterns and trends.
-
-**Skills:** Python, Pandas, Matplotlib, Data Visualization
-
-[View Analysis & Visualizations](Retail_Sales_Python_Analysis.html)
-
 ### Diamond Pricing Analysis
 Analyzed diamond pricing data to explore relationships between diamond characteristics and price using statistical analysis and visualizations.
 
